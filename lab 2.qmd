@@ -1,5 +1,330 @@
 ---
 title: "lab 2"
 format: html
+
+title: 'Lab 2'
+format: 
+  html:
+    self-contained: true
 ---
+
+```{r}
+library(tidyverse)
+tree_data <- read.csv("data/tree_dat.csv")
+
+glimpse(tree_data)
+
+```
+
+Question 1: In the tree growth data set I see the analyzation of 2,291 different trees. For all the 2,291 different trees, age,linear growth (mm), estimated inside bark radius of tree at breast height at the end of the year of grow (mm) recorded for every year of their life. There were also 15 different tree species that were analyzed.
+
+```{r}
+stand1_records <- tree_data %>%
+  filter(standID == 1) %>%
+  nrow()
+
+stand1_records
+```
+
+Question 2: Based on the output of the code above 979 records have made it to stand 1
+
+```{r}
+species_counts <- tree_data %>%
+  filter(species %in% c("ABBA", "PIST")) %>%
+  count(species)
+
+species_counts
+```
+
+Question 3: Based on the output of the code above there have been 13,033 records of Abies balsamea specie and 4,188 records of the Pinus strobus specie.
+
+```{r}
+last_year <- max(tree_data$year)
+
+old_trees <- tree_data %>%
+  filter(year == last_year, age > 200) %>%
+  nrow()
+
+old_trees
+```
+
+Question 4:Bbased off of the code above there are 7 trees in the entire dataset that were over the age of 200 in the the last year
+
+```{r}
+oldest_tree <- tree_data %>%
+  slice_max(age, n = 1)
+
+oldest_tree 
+```
+
+Question 5: Based on the code that was ran above, the Pinus resinosa is the oldest tree in the dataset at 269 years old
+
+```{r}
+oldest_trees_2001 <- tree_data %>%
+  filter(year == 2001) %>%  
+  slice_max(age, n = 5)  
+
+oldest_trees_2001  
+
+```
+
+Question 6: Based on the code that was ran above, the first and second oldest trees were the Pinus resinosa, and they were 263 and 259 years olds. The the next three oldest were Fraxinus nigras and they were the ages of 212, 206, and 206.
+
+```{r}
+sample_30_percent <- tree_data %>%
+  filter(year == 2002) %>%  
+  slice_sample(prop = 0.3)
+
+nrow(sample_30_percent)
+
+```
+
+Question 7: Based on the output of the code above, 687 trees are in a 30% sample of those recorded in 2002.
+
+```{r}
+top_trees_stand5_2007 <- tree_data %>%
+  filter(standID == 5, year == 2007) %>% 
+  arrange(desc(rad_ib)) %>%  
+  slice_head(n = 3)  
+
+top_trees_stand5_2007$treeID
+```
+
+Question 8: Based on the code that has been written above, the three tree ID's are 128, 157, 135.
+
+```{r}
+library(dplyr)
+
+
+smallest_trees_2007_stand3 <- tree_data %>%
+  select(treeID, stand, year, rad_ib) %>%  
+  filter(stand == 3, year == 2007) %>%    
+  slice_min(rad_ib, n = 3)                 
+
+print(smallest_trees_2007_stand3)
+
+
+```
+
+Question 9:
+
+```{r}
+tree_data_no_stand <- tree_data %>%
+  select(-stand)  
+
+glimpse(tree_data_no_stand)
+tree_data_no_stand <- tree_data %>%
+  select(-stand)  # Remove 'stand' column
+```
+
+Question 10: The output of the code is above
+
+```{r}
+tree_data_ID <- tree_data %>%
+  select(contains("ID"))  
+glimpse(tree_data_ID)
+
+```
+
+Question 11: The output of the code is above
+
+```{r}
+tree_data_ID_stand <- tree_data %>%
+  select(contains("ID") | contains("stand"))  
+
+glimpse(tree_data_ID_stand)
+
+```
+
+Question 12:The output of the code is above.
+
+```{r}
+tree_data <- tree_data %>%
+  rename(
+    rad_ib_mm = rad_ib,  
+    inc_mm = inc         
+  )
+
+glimpse(tree_data)
+
+```
+
+Question 13: The output of the code is above.
+
+```{r}
+tree_data <- tree_data %>%
+  mutate(
+    rad_ib_cm = rad_ib_mm / 10,  
+    DBH_cm = rad_ib_cm * 2,      
+    BA_m2 = 0.00007854 * (DBH_cm^2)  
+  )
+
+mean_BA_POTR_2007 <- tree_data %>%
+  filter(species == "POTR", year == 2007) %>%
+  summarise(mean_BA_m2 = mean(BA_m2, na.rm = TRUE))  
+
+mean_BA_POTR_2007
+```
+
+Question 14: Based on the output of the code above, the mean basal area of the POTR species in 2007 was .03696619cm.
+
+```{r}
+tree_data <- tree_data %>%
+  mutate(established = if_else(age > 5, TRUE, FALSE))
+
+count_established <- tree_data %>%
+  count(established)
+
+count_established
+
+```
+
+Question 15: Based of of the output of the code above, there are 122,503 records of established trees.
+
+```{r}
+tree_data <- tree_data %>%
+  mutate(
+    DBH_class = case_when(
+      DBH_cm >= 0 & DBH_cm < 2.5  ~ "seedling",
+      DBH_cm >= 2.5 & DBH_cm < 10 ~ "sapling",
+      DBH_cm >= 10 & DBH_cm < 30  ~ "pole",
+      DBH_cm >= 30                ~ "sawlog",
+      TRUE ~ NA_character_  
+    )
+  )
+
+
+DBH_class_counts_2007 <- tree_data %>%
+  filter(year == 2007) %>%
+  count(DBH_class)
+
+DBH_class_counts_2007
+
+
+
+```
+
+Question 16: Based on the output of the code above, the pole class had 1,963 counts, the sapling class has 252 counts, and the sawlog class had 76 counts.
+
+```{r}
+DBH_summary_2007 <- tree_data %>%
+  filter(year == 2007) %>%
+  summarize(
+    mean_DBH_cm = mean(DBH_cm, na.rm = TRUE),  
+    sd_DBH_cm = sd(DBH_cm, na.rm = TRUE)       
+  )
+
+
+DBH_summary_2007
+
+
+```
+
+Question 17: Based on the output of the code above, the mean dbh was 16.09351cm and the sd of the dbh was 6.138643cm.
+
+```{r}
+species_age_2003 <- tree_data %>%
+  filter(year == 2003) %>%  
+  group_by(species) %>%  
+  summarize(mean_age = mean(age, na.rm = TRUE)) %>% 
+  arrange(desc(mean_age))  
+
+
+oldest_species_2003 <- species_age_2003 %>%
+  slice_head(n = 3)
+
+oldest_species_2003
+
+```
+
+Question 18: Based on output of the code above, the three species with the oldest men age are Thuja occidentalis, Fraxinus nigra, and PIST
+
+```{r}
+year_summary <- tree_data %>%
+  summarize(
+    num_unique_years = n_distinct(year),
+    first_year = min(year, na.rm = TRUE), 
+    last_year = max(year, na.rm = TRUE)   
+  )
+
+year_summary
+```
+
+Question 19: Based on the output of the code above, there are 111 unique years.
+
+```{r}
+stand_years <- tree_data %>%
+  group_by(stand) %>%  
+  summarize(num_years = n_distinct(year)) %>%  
+  arrange(desc(num_years))  
+
+
+max_years <- max(stand_years$num_years)  
+
+largest_stands <- stand_years %>%
+  filter(num_years == max_years)  
+
+largest_stands
+
+```
+
+Question 20: Based on the output above stands A1, D1, D2, D3, and F1 were all tied with 111 years.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+
+growth_rates <- tree_data %>%
+  arrange(species, treeID, year) %>%  
+  group_by(treeID) %>%
+  mutate(annual_growth = DBH_cm - lag(DBH_cm)) %>%  
+  filter(!is.na(annual_growth)) %>%  
+  summarise(
+    total_years = n(),  
+    avg_growth = mean(annual_growth, na.rm = TRUE),  
+    sd_growth = sd(annual_growth, na.rm = TRUE),  
+    species = first(species), 
+    .groups = "drop"
+  ) %>%
+  filter(total_years >= 10) %>%  
+  group_by(species) %>%
+  summarise(
+    species_avg_growth = mean(avg_growth, na.rm = TRUE),
+    species_sd_growth = mean(sd_growth, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+fastest_species <- growth_rates %>%
+  arrange(desc(species_avg_growth)) %>%
+  slice_head(n = 3)
+
+slowest_species <- growth_rates %>%
+  arrange(species_avg_growth) %>%
+  slice_head(n = 3)
+
+print(fastest_species)
+print(slowest_species)
+
+
+if (!dir.exists("images")) {
+  dir.create("images")
+}
+
+
+fastest_plot <- ggplot(fastest_species, aes(x = reorder(species, -species_avg_growth), y = species_avg_growth, fill = species)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Fastest Growing Species", x = "Species", y = "Average Growth Rate (cm/year)") +
+  theme_minimal()
+
+fastest_plot <- ggplot(fastest_species, aes(x = reorder(species, -species_avg_growth), y = species_avg_growth, fill = species)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Fastest Growing Species", x = "Species", y = "Average Growth Rate (cm/year)") +
+  theme_minimal()
+
+fastest_plot
+
+```
+
 
