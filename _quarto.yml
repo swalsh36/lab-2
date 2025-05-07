@@ -1,16 +1,4 @@
----
 project:
-   type: website
-   output-dir: docs
-  
-
-website:
-  title: "swalsh36.github.io"
-format:
-  html:
-    self-contained: true
-
-editor: visual
-
----
+  type: default
+  output-dir: _output
 

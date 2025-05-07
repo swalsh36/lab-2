@@ -1,7 +1,4 @@
 ---
-title: "lab 2"
-format: html
-
 title: 'Lab 2'
 format: 
   html:
@@ -326,5 +323,3 @@ fastest_plot <- ggplot(fastest_species, aes(x = reorder(species, -species_avg_gr
 fastest_plot
 
 ```
-
-
